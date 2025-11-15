@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full bg-dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FitStreak - Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] }, colors: { neon: '#00d4ff', dark: '#0f0f0f', card: '#1a1a1a' } } } }
+  </script>
+  <style>.glass { backdrop-filter: blur(12px); background: rgba(26, 26, 26, 0.7); border: 1px solid rgba(255,255,255,0.1); }</style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+  <div class="glass p-8 rounded-2xl shadow-2xl w-full max-w-md">
+    <h1 class="text-3xl font-bold text-neon text-center mb-6">FitStreak</h1>
+    <form id="loginForm" class="space-y-4">
+      <input type="email" id="email" placeholder="Email" required class="w-full p-3 rounded bg-card text-white placeholder-gray-400 border border-gray-700 focus:border-neon focus:outline-none"/>
+      <input type="password" id="password" placeholder="Senha" required class="w-full p-3 rounded bg-card text-white placeholder-gray-400 border border-gray-700 focus:border-neon focus:outline-none"/>
+      <button type="submit" class="w-full bg-neon text-dark font-bold py-3 rounded-lg hover:bg-cyan-400 transition">Entrar</button>
+    </form>
+    <p class="text-center text-gray-400 mt-4">Não tem conta? <a href="register.html" class="text-neon hover:underline">Criar</a></p>
+  </div>
+
+  <script>
+    const form = document.getElementById('loginForm');
+    form.onsubmit = (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      let found = false;
+      for (let key in localStorage) {
+        if (key.startsWith('user_')) {
+          const user = JSON.parse(localStorage.getItem(key));
+          if (user.email === email && user.password === password) {
+            localStorage.setItem('currentUser', JSON.stringify(user));
+            location.href = 'app.html';
+            found = true;
+            break;
+          }
+        }
+      }
+      if (!found) alert('Email ou senha incorretos!');
+    };
+  </script>
+</body>
+</html>
