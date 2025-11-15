@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full bg-dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FitStreak</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] }, colors: { neon: '#00d4ff', dark: '#0f0f0f', card: '#1a1a1a' } } } }
+  </script>
+  <style>
+    .glass { backdrop-filter: blur(12px); background: rgba(26, 26, 26, 0.8); border: 1px solid rgba(255,255,255,0.1); }
+    .fire { animation: fire 1.5s infinite; }
+    @keyframes fire { 0%,100% { filter: brightness(1); } 50% { filter: brightness(1.5); } }
+    .heatmap-day { width: 12px; height: 12px; border-radius: 2px; }
+  </style>
+</head>
+<body class="min-h-screen text-white">
+
+  <!-- Navbar -->
+  <nav class="glass p-4 sticky top-0 z-50 border-b border-gray-800">
+    <div class="max-w-6xl mx-auto flex justify-between items-center">
+      <h1 class="text-2xl font-bold text-neon">FitStreak</h1>
+      <div class="flex gap-4">
+        <button onclick="show('dashboard')" class="hover:text-neon">Dashboard</button>
+        <button onclick="show('train')" class="hover:text-neon">Treino</button>
+        <button onclick="show('history')" class="hover:text-neon">Histórico</button>
+        <button onclick="show('profile')" class="hover:text-neon">Perfil</button>
+        <button onclick="logout()" class="text-red-400 hover:text-red-300">Sair</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="max-w-6xl mx-auto p-4">
+
+    <!-- DASHBOARD -->
+    <div id="dashboard" class="space-y-6">
+      <div class="glass p-6 rounded-xl text-center">
+        <h2 class="text-xl mb-2">Olá, <span id="userName"></span>!</h2>
+        <div class="flex justify-center gap-8 text-3xl font-bold">
+          <div>
+            <p class="text-5xl fire text-orange-400" id="currentStreak">0</p>
+            <p class="text-sm text-gray-400">Streak Atual</p>
+          </div>
+          <div>
+            <p class="text-5xl text-neon" id="maxStreak">0</p>
+            <p class="text-sm text-gray-400">Melhor Streak</p>
+          </div>
+        </div>
+        <button onclick="show('train')" class="mt-6 bg-neon text-dark font-bold px-8 py-3 rounded-lg hover:bg-cyan-400 transition">Treinar Hoje</button>
+      </div>
+
+      <div class="glass p-4 rounded-xl">
+        <h3 class="text-lg font-semibold mb-3">Atividade (últimos 30 dias)</h3>
+        <div id="heatmap" class="flex flex-wrap gap-1 justify-center"></div>
+      </div>
+    </div>
+
+    <!-- TREINO -->
+    <div id="train" class="hidden space-y-6">
+      <h2 class="text-2xl font-bold">Treino do Dia</h2>
+      <div class="glass p-6 rounded-xl">
+        <p class="mb-4">Selecione até 4 grupos musculares:</p>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" value="peito" class="muscle-checkbox w-5 h-5 accent-neon">
+            <span class="capitalize">peito</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" value="costas" class="muscle-checkbox w-5 h-5 accent-neon">
+            <span class="capitalize">costas</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" value="pernas" class="muscle-checkbox w-5 h-5 accent-neon">
+            <span class="capitalize">pernas</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" value="ombros" class="muscle-checkbox w-5 h-5 accent-neon">
+            <span class="capitalize">ombros</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" value="braços" class="muscle-checkbox w-5 h-5 accent-neon">
+            <span class="capitalize">braços</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" value="abdômen" class="muscle-checkbox w-5 h-5 accent-neon">
+            <span class="capitalize">abdômen</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" value="cardio" class="muscle-checkbox w-5 h-5 accent-neon">
+            <span class="capitalize">cardio</span>
+          </label>
+        </div>
+        <button onclick="generateWorkout()" class="bg-neon text-dark font-bold px-6 py-2 rounded hover:bg-cyan-400 transition">Gerar Treino</button>
+      </div>
+
+      <div id="workoutDisplay" class="hidden space-y-4"></div>
+      <button id="completeBtn" onclick="completeWorkout()" class="hidden w-full bg-green-500 text-white font-bold py-3 rounded-lg hover:bg-green-400 transition">Concluir Treino</button>
+    </div>
+
+    <!-- HISTÓRICO -->
+    <div id="history" class="hidden">
+      <h2 class="text-2xl font-bold mb-4">Histórico de Treinos</h2>
+      <div id="historyList" class="space-y-3"></div>
+    </div>
+
+    <!-- PERFIL -->
+    <div id="profile" class="hidden">
+      <h2 class="text-2xl font-bold mb-4">Perfil</h2>
+      <div class="glass p-6 rounded-xl space-y-4">
+        <p><strong>Nome:</strong> <span id="pName"></span></p>
+        <p><strong>Idade:</strong> <span id="pAge"></span></p>
+        <p><strong>Nível:</strong> <span id="pLevel"></span></p>
+        <button onclick="exportData()" class="bg-neon text-dark px-4 py-2 rounded hover:bg-cyan-400">Exportar Dados (JSON)</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const EXERCISES = {
+      peito: ["Supino Reto", "Supino Inclinado", "Crucifixo", "Flexões"],
+      costas: ["Barra Fixa", "Remada Curvada", "Pulldown", "Face Pull"],
+      pernas: ["Agachamento", "Leg Press", "Stiff", "Cadeira Extensora"],
+      ombros: ["Desenvolvimento", "Elevação Lateral", "Elevação Frontal"],
+      braços: ["Rosca Bíceps", "Tríceps Pulley", "Rosca Martelo", "Francês"],
+      abdômen: ["Prancha", "Abdominal Infra", "Russian Twist", "Elevação de Pernas"],
+      cardio: ["Corrida 20min", "Pular Corda", "Burpees", "Bike 30min"]
+    };
+
+    let user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    if (!user.id) location.href = 'login.html';
+
+    function show(section) {
+      document.querySelectorAll('#dashboard, #train, #history, #profile').forEach(el => el.classList.add('hidden'));
+      document.getElementById(section).classList.remove('hidden');
+      if (section === 'dashboard') updateDashboard();
+      if (section === 'history') updateHistory();
+      if (section === 'profile') updateProfile();
+    }
+
+    function updateDashboard() {
+      document.getElementById('userName').textContent = user.name;
+      document.getElementById('currentStreak').textContent = user.streak.current;
+      document.getElementById('maxStreak').textContent = user.streak.max;
+
+      const heatmap = document.getElementById('heatmap');
+      heatmap.innerHTML = '';
+      const today = new Date();
+      for (let i = 29; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        const dateStr = date.toISOString().split('T')[0];
+        const trained = user.workouts.some(w => w.date === dateStr && w.completed);
+        const div = document.createElement('div');
+        div.className = `heatmap-day ${trained ? 'bg-neon' : 'bg-gray-800'}`;
+        div.title = date.toLocaleDateString();
+        heatmap.appendChild(div);
+      }
+    }
+
+    function generateWorkout() {
+      const checkboxes = document.querySelectorAll('.muscle-checkbox:checked');
+      if (checkboxes.length === 0 || checkboxes.length > 4) return alert('Selecione 1 a 4 grupos!');
+      const muscles = Array.from(checkboxes).map(c => c.value);
+      const volume = user.age > 50 || user.level === 'iniciante' ? 'low' : 'high';
+      const sets = volume === 'low' ? 3 : 4;
+      const reps = volume === 'low' ? '10-12' : '8-12';
+
+      const workout = {
+        id: Date.now().toString(),
+        date: new Date().toISOString().split('T')[0],
+        muscles,
+        exercises: [],
+        completed: false
+      };
+
+      const display = document.getElementById('workoutDisplay');
+      display.innerHTML = '';
+      muscles.forEach(m => {
+        const group = document.createElement('div');
+        group.className = 'glass p-4 rounded-lg mb-4';
+        group.innerHTML = `<h3 class="font-bold capitalize text-neon mb-2">${m}</h3>`;
+        const exList = EXERCISES[m].slice(0, 4);
+        exList.forEach(ex => {
+          group.innerHTML += `<p class="text-sm">${ex} — ${sets}×${reps} — Descanso: 60-90s</p>`;
+        });
+        workout.exercises.push({ muscle: m, list: exList.map(name => ({ name, sets, reps, rest: '60-90s' })) });
+        display.appendChild(group);
+      });
+
+      display.classList.remove('hidden');
+      document.getElementById('completeBtn').classList.remove('hidden');
+      window.currentWorkout = workout;
+    }
+
+    function completeWorkout() {
+      if (!window.currentWorkout) return;
+      window.currentWorkout.completed = true;
+      user.workouts.push(window.currentWorkout);
+
+      const today = new Date().toISOString().split('T')[0];
+      const last = user.streak.lastTrain;
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+      if (last === today) {
+        alert('Você já treinou hoje!');
+        return;
+      }
+
+      if (last === yesterdayStr || !last) {
+        user.streak.current += 1;
+      } else {
+        user.streak.current = 1;
+      }
+      user.streak.lastTrain = today;
+      if (user.streak.current > user.streak.max) user.streak.max = user.streak.current;
+
+      localStorage.setItem('currentUser', JSON.stringify(user));
+      localStorage.setItem('user_' + user.id, JSON.stringify(user));
+      alert('Treino concluído! 🔥 Streak: ' + user.streak.current);
+      show('dashboard');
+    }
+
+    function updateHistory() {
+      const list = document.getElementById('historyList');
+      list.innerHTML = user.workouts.length === 0 ? '<p class="text-gray-400">Nenhum treino ainda.</p>' : '';
+      user.workouts.slice().reverse().forEach(w => {
+        const div = document.createElement('div');
+        div.className = 'glass p-4 rounded-lg';
+        div.innerHTML = `
+          <p class="font-semibold">${new Date(w.date).toLocaleDateString('pt-BR')} ${w.completed ? '✅' : '⏳'}</p>
+          <p class="text-sm capitalize">${w.muscles.join(', ')}</p>
+        `;
+        list.appendChild(div);
+      });
+    }
+
+    function updateProfile() {
+      document.getElementById('pName').textContent = user.name;
+      document.getElementById('pAge').textContent = user.age;
+      document.getElementById('pLevel').textContent = user.level;
+    }
+
+    function exportData() {
+      const data = JSON.stringify(user, null, 2);
+      const blob = new Blob([data], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'fitstreak_dados.json'; a.click();
+    }
+
+    function logout() {
+      localStorage.removeItem('currentUser');
+      location.href = 'login.html';
+    }
+
+    // Init
+    show('dashboard');
+  </script>
+</body>
+</html>
